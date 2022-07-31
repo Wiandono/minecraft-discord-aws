@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "project-firdaus"
+
+[packages]
+zappa = "==0.54.2"
+
+[dev-packages]
+commitizen = "==2.29.2"
+pre-commit = "==2.20.0"
+
+[requires]
+python_version = "3.8"
