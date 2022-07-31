@@ -9,6 +9,7 @@ zappa = "==0.54.2"
 [dev-packages]
 commitizen = "==2.29.2"
 pre-commit = "==2.20.0"
+wemake-python-styleguide = "==0.16.1"
 
 [requires]
 python_version = "3.8"
