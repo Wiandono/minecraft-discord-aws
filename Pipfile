@@ -5,7 +5,7 @@ name = "project-firdaus"
 
 [packages]
 zappa = "==0.54.2"
-pynacl = "==1.5.0"
+discord-interactions = "==0.4.0"
 
 [dev-packages]
 commitizen = "==2.29.2"
