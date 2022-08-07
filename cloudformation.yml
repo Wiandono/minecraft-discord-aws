@@ -5,11 +5,9 @@ Parameters:
     Description: AWS ECS AMI ID
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id
-
-  AvailabilityZone:
-    Description: Availability Zone
-    Type: String
-    Default: 'ap-southheast-1a'
+    AllowedValues:
+      - /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id
+      - /aws/service/ecs/optimized-ami/amazon-linux-2/arm64/recommended/image_id
 
   ServerState:
     Type: String
@@ -22,15 +20,13 @@ Parameters:
   InstanceType:
     Type: String
     Description: "t3.medium is a good cost-effective instance, 2 vCPUs and 3.75 GB of RAM with moderate network performance. Change at your discretion. https://aws.amazon.com/ec2/instance-types/."
-    Default: t4g.micro
+    Default: t4g.small
     AllowedValues:
-      - t4g.micro
       - t4g.small
       - t4g.medium
       - t4g.large
       - t4g.xlarge
       - t4g.2xlarge
-      - t3a.micro
       - t3a.small
       - t3a.medium
       - t3a.large
@@ -40,7 +36,7 @@ Parameters:
   SpotPrice:
     Type: String
     Description: "A t3.medium shouldn't cost much more than a cent per hour. Note: Leave this blank to use on-demand pricing."
-    Default: "0.01"
+    Default: "0.02"
 
   ContainerInsights:
     Type: String
@@ -66,7 +62,7 @@ Parameters:
   LogGroupRetentionInDays:
     Type: Number
     Description: (Log retention in days)
-    Default: 7
+    Default: 3
 
   LogStreamPrefix:
     Type: String
@@ -151,6 +147,11 @@ Parameters:
     Description: Max view radius (in chunks) the server will send to the client (default 10)
     Default: -1
 
+  SimulationDistance:
+    Type: Number
+    Description: Max simulation radius (in chunks) the server will simulate
+    Default: -1
+
   GameMode:
     Type: String
     Description: "Options: creative, survival (default), adventure, spectator (v1.8+)"
@@ -178,7 +179,7 @@ Parameters:
   EnableRollingLogs:
     Type: String
     Description: "By default the log file will grow without limit. Set to true to use a rolling log strategy."
-    Default: false
+    Default: true
     AllowedValues:
       - true
       - false
@@ -186,6 +187,55 @@ Parameters:
   Timezone:
     Type: String
     Description: "Change the server's timezone. Use the canonical name of the format: Area/Location (e.g. America/New_York)"
+
+  Snooper:
+    Type: String
+    Description: "If set to false, the server will not send data to snoop.minecraft.net server"
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
+  SpawnProtection:
+    Type: Number
+    Description: "Sets the area that non-ops can not edit (0 to disable)"
+
+  OnlineMode:
+    Type: String
+    Description: "By default, server checks connecting players against Minecraft's account database"
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
+  UseAikarFlags:
+    Type: String
+    Description: "Whether to use Aikar's JVM flags or not"
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  MaxTickTime:
+    Type: Number
+    Description: "The maximum number of milliseconds a single tick may take before the server watchdog stops the server"
+
+  AutoPause:
+    Type: String
+    Description: "Enable the Autopause functionality"
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  PlayerIdleTimeout:
+    Type: Number
+    Description: "The maximum number of milliseconds a single tick may take before the server watchdog stops the server"
+    Default: 600
+
+  ModrinthProjects:
+    Type: String
+    Description: "Comma separated list of project slugs (short name) or IDs."
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -199,7 +249,7 @@ Metadata:
       - Label:
           default: Server Settings
         Parameters:
-          - "DockerImageTag"
+          - DockerImageTag
       - Label:
           default: Optional Server Settings
         Parameters:
@@ -212,10 +262,22 @@ Metadata:
           - Seed
           - MaxPlayers
           - ViewDistance
+          - SimulationDistance
           - GameMode
           - LevelType
           - EnableRollingLogs
           - Timezone
+          - Snooper
+          - SpawnProtection
+          - OnlineMode
+          - UseAikarFlags
+          - MaxTickTime
+          - AutoPause
+          - PlayerIdleTimeout
+      - Label:
+          default: Minecraft Mod Settings
+        Parameters:
+          - ModrinthProjects
       - Label:
           default: Optional ECS Cluster and Task Configuration
         Parameters:
@@ -244,7 +306,7 @@ Metadata:
       SpotPrice:
         default: "Maximum spot price per hour? Leave blank to disable spot pricing."
       DockerImageTag:
-        default: "Which version of Minecraft do you want to launch?"
+        default: "Which type of Java do you want to use?"
       MinecraftTypeTag:
         default: "Which type of Minecraft do you want to launch?"
       AdminPlayerNames:
@@ -285,6 +347,8 @@ Metadata:
         default: "Max simultaneous players"
       ViewDistance:
         default: "Max view distance"
+      SimulationDistance:
+        default: "Max simulation distance"
       GameMode:
         default: "The Minecraft game mode"
       LevelType:
@@ -293,6 +357,22 @@ Metadata:
         default: "Whether to enable rolling logs"
       Timezone:
         default: "The server's timezone"
+      Snooper:
+        default: "Whether to send data to snoop.minecraft.net or not"
+      SpawnProtection:
+        default: "Whether to protect spawn from being edited by non op player or not"
+      OnlineMode:
+        default: "Whether to make the server checks connecting player against Minecraft account database"
+      UseAikarFlags:
+        default: "Whether to use Aikar's JVM flags or not"
+      MaxTickTime:
+        default: "Max tick time duration, set to -1 (disable) to use Auto Pausing feature"
+      AutoPause:
+        default: "Whether to enable Auto Pause functionality or not"
+      PlayerIdleTimeout:
+        default: "Duration on when idle player should get disconnected"
+      ModrinthProjects:
+        default: "The comma separated list of Modrint Mods"
 
 Conditions:
   MinecraftTypeTagProvided: !Not [ !Equals [ !Ref MinecraftTypeTag, '' ] ]
@@ -313,10 +393,19 @@ Conditions:
   SeedProvided: !Not [ !Equals [ !Ref Seed, '' ] ]
   MaxPlayersProvided: !Not [ !Equals [ !Ref MaxPlayers, -1 ] ]
   ViewDistanceProvided: !Not [ !Equals [ !Ref ViewDistance, -1 ] ]
+  SimulationDistanceProvided: !Not [ !Equals [ !Ref SimulationDistance, -1 ] ]
   GameModeProvided: !Not [ !Equals [ !Ref GameMode, '' ] ]
   LevelTypeProvided: !Not [ !Equals [ !Ref LevelType, '' ] ]
   EnableRollingLogsProvided: !Not [ !Equals [ !Ref EnableRollingLogs, '' ] ]
   TimezoneProvided: !Not [ !Equals [ !Ref Timezone, '' ] ]
+  SnooperProvided: !Not [ !Equals [ !Ref Snooper, '' ] ]
+  SpawnProtectionProvided: !Not [ !Equals [ !Ref SpawnProtection, '' ] ]
+  OnlineModeProvided: !Not [ !Equals [ !Ref OnlineMode, '' ] ]
+  UseAikarFlagsProvided: !Not [ !Equals [ !Ref UseAikarFlags, '' ] ]
+  MaxTickTimeProvided: !Not [ !Equals [ !Ref MaxTickTime, '' ] ]
+  AutoPauseProvided: !Not [ !Equals [ !Ref AutoPause, '' ] ]
+  PlayerIdleTimeoutProvided: !Not [ !Equals [ !Ref PlayerIdleTimeout, '' ] ]
+  ModrinthProjectsProvided: !Not [ !Equals [ !Ref ModrinthProjects, '' ] ]
 
 
 Mappings:
@@ -342,7 +431,10 @@ Resources:
   SubnetA:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: !Ref AvailabilityZone
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs
+          Ref: 'AWS::Region'
       CidrBlock: !Select [ 0, !Cidr [ 10.100.0.0/26, 4, 4 ] ]
       VpcId: !Ref Vpc
 
@@ -380,8 +472,7 @@ Resources:
 
   Efs:
     Type: AWS::EFS::FileSystem
-    Properties:
-      AvailabilityZoneName: !Ref AvailabilityZone
+    Properties: {}
 
   MountA:
     Type: AWS::EFS::MountTarget
@@ -467,10 +558,6 @@ Resources:
       MinSize: 0
       VPCZoneIdentifier:
         - !Ref SubnetA
-      Tags:
-        - Key: Stack
-          Value: Minecraft
-          PropagateAtLaunch: true
     Metadata:
       LaunchEvent: !If [ DnsConfigEnabled, !GetAtt LaunchEvent.Arn, "" ]
 
@@ -630,6 +717,11 @@ Resources:
                 Value: !Sub "${ViewDistance}"
               - !Ref 'AWS::NoValue'
             - !If
+              - SimulationDistanceProvided
+              - Name: "SIMULATION_DISTANCE"
+                Value: !Sub "${SimulationDistance}"
+              - !Ref 'AWS::NoValue'
+            - !If
               - GameModeProvided
               - Name: "MODE"
                 Value: !Sub "${GameMode}"
@@ -648,6 +740,46 @@ Resources:
               - TimezoneProvided
               - Name: "TZ"
                 Value: !Sub "${Timezone}"
+              - !Ref 'AWS::NoValue'
+            - !If
+              - SnooperProvided
+              - Name: "SNOOPER_ENABLED"
+                Value: !Sub "${Snooper}"
+              - !Ref 'AWS::NoValue'
+            - !If
+              - SpawnProtectionProvided
+              - Name: "SPAWN_PROTECTION"
+                Value: !Sub "${SpawnProtection}"
+              - !Ref 'AWS::NoValue'
+            - !If
+              - OnlineModeProvided
+              - Name: "ONLINE_MODE"
+                Value: !Sub "${OnlineMode}"
+              - !Ref 'AWS::NoValue'
+            - !If
+              - UseAikarFlagsProvided
+              - Name: "USE_AIKAR_FLAGS"
+                Value: !Sub "${UseAikarFlags}"
+              - !Ref 'AWS::NoValue'
+            - !If
+              - MaxTickTimeProvided
+              - Name: "MAX_TICK_TIME"
+                Value: !Sub "${MaxTickTime}"
+              - !Ref 'AWS::NoValue'
+            - !If
+              - AutoPauseProvided
+              - Name: "ENABLE_AUTOPAUSE"
+                Value: !Sub "${AutoPause}"
+              - !Ref 'AWS::NoValue'
+            - !If
+              - PlayerIdleTimeoutProvided
+              - Name: "PLAYER_IDLE_TIMEOUT"
+                Value: !Sub "${PlayerIdleTimeout}"
+              - !Ref 'AWS::NoValue'
+            - !If
+              - ModrinthProjectsProvided
+              - Name: "MODRINTH_PROJECTS"
+                Value: !Sub "${ModrinthProjects}"
               - !Ref 'AWS::NoValue'
 
   CloudWatchLogGroup:
