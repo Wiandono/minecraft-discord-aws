@@ -49,10 +49,12 @@ Parameters:
   EntryPoint:
     Type: CommaDelimitedList
     Description: "Task entrypoint (Optional - image default is script /start)"
+    Default: ''
 
   Command:
     Type: CommaDelimitedList
     Description: "Task command (Optional - image default is empty)"
+    Default: ''
 
   LogGroupName:
     Type: String
@@ -102,6 +104,7 @@ Parameters:
   MinecraftTypeTag:
     Type: String
     Description: "(Examples include SPIGOT, BUKKIT, TUINITY, etc) Refer to tag descriptions available here: https://github.com/itzg/docker-minecraft-server)"
+    Default: ''
 
   AdminPlayerNames:
     Type: String
@@ -136,6 +139,7 @@ Parameters:
   Seed:
     Type: String
     Description: The seed used to generate the world
+    Default: ''
 
   MaxPlayers:
     Type: Number
@@ -187,6 +191,7 @@ Parameters:
   Timezone:
     Type: String
     Description: "Change the server's timezone. Use the canonical name of the format: Area/Location (e.g. America/New_York)"
+    Default: ''
 
   Snooper:
     Type: String
@@ -199,6 +204,7 @@ Parameters:
   SpawnProtection:
     Type: Number
     Description: "Sets the area that non-ops can not edit (0 to disable)"
+    Default: -1
 
   OnlineMode:
     Type: String
@@ -219,6 +225,7 @@ Parameters:
   MaxTickTime:
     Type: Number
     Description: "The maximum number of milliseconds a single tick may take before the server watchdog stops the server"
+    Default: -2
 
   AutoPause:
     Type: String
@@ -236,6 +243,7 @@ Parameters:
   ModrinthProjects:
     Type: String
     Description: "Comma separated list of project slugs (short name) or IDs."
+    Default: ''
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -399,10 +407,10 @@ Conditions:
   EnableRollingLogsProvided: !Not [ !Equals [ !Ref EnableRollingLogs, '' ] ]
   TimezoneProvided: !Not [ !Equals [ !Ref Timezone, '' ] ]
   SnooperProvided: !Not [ !Equals [ !Ref Snooper, '' ] ]
-  SpawnProtectionProvided: !Not [ !Equals [ !Ref SpawnProtection, '' ] ]
+  SpawnProtectionProvided: !Not [ !Equals [ !Ref SpawnProtection, -1 ] ]
   OnlineModeProvided: !Not [ !Equals [ !Ref OnlineMode, '' ] ]
   UseAikarFlagsProvided: !Not [ !Equals [ !Ref UseAikarFlags, '' ] ]
-  MaxTickTimeProvided: !Not [ !Equals [ !Ref MaxTickTime, '' ] ]
+  MaxTickTimeProvided: !Not [ !Equals [ !Ref MaxTickTime, -2 ] ]
   AutoPauseProvided: !Not [ !Equals [ !Ref AutoPause, '' ] ]
   PlayerIdleTimeoutProvided: !Not [ !Equals [ !Ref PlayerIdleTimeout, '' ] ]
   ModrinthProjectsProvided: !Not [ !Equals [ !Ref ModrinthProjects, '' ] ]
