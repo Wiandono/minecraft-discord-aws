@@ -2,7 +2,9 @@
   "dev": {
     "app_function": "main.function",
     "aws_environment_variables": {
-      "BOT_PUBLIC_KEY": "<YOUR BOT PUBLIC KEY, KEEP SECURE>"
+      "BOT_PUBLIC_KEY": "<YOUR BOT PUBLIC KEY, KEEP SECURE>",
+      "CF_STACK_NAME": "<Your CloudFormation stack name>",
+      "CF_REGION": "<Your CloudFormation region>"
     },
     "aws_region": "ap-southeast-1",
     "cors": true,
