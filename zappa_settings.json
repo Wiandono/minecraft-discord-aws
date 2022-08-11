@@ -17,6 +17,7 @@
     "profile_name": "default",
     "project_name": "project-firdaus",
     "runtime": "python3.8",
-    "s3_bucket": "zappa-ulcjxym95"
+    "s3_bucket": "zappa-ulcjxym95",
+    "timeout_seconds": 120
   }
 }
