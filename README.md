@@ -343,7 +343,7 @@ resources for you.
          {
            "Effect": "Allow",
            "Action": [
-             "ssm:GetParameter",
+             "ssm:GetParameters",
              "ec2:DescribeImages",
              "ec2:DescribeInstances",
              "ecs:RegisterTaskDefinition",
